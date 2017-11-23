@@ -21,5 +21,4 @@ along two-years of back-testing.
 For building the neural network, I used [PyTorch](pytorch.org). Network architecture:
 ![](arxiv-1711.04174-neural-network.png)
 
-Due to financial constraints, instead of using the [QuantQuote](https://quantquote.com/
-historical-stock-data) market data mentioned in the paper, data pulled from the [IEX Trading API](https://iextrading.com/developer/docs/) was used to train and test the model.
+Due to financial constraints, instead of using the [QuantQuote](https://quantquote.com/historical-stock-data) market data mentioned in the paper, data pulled from the [IEX Trading API](https://iextrading.com/developer/docs/) was used to train and test the model.
