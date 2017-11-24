@@ -6,36 +6,46 @@ import torch.optim as optim
 
 import matplotlib.pyplot as plt
 
+from zipline.api import symbol, order
+
 
 class FinancialTimeSeriesNetwork(nn.Module):
 
     def __init__(self):
+        """
+        Section 3.2; Figure 2 has an image of the architecture
+        Section 5.2; implementation details of each layer
+
+        Uses ReLU layers; in PyTorch terms this is equal to creating
+        nn.Linear() layers, and calling .clamp() in the forward pass
+        to compute the weights
+
+        NOTE: .clamp() works for both Tensor and Variable
+        """
         super(FinancialTimeSeriesNetwork, self).__init__()
-        # Section 3.2; Figure 2 has an image of the architecture
-        # TODO: define dimensions of each layer
-        # Section 5.2; implementation details of each layer
-        # TODO: figure out what type of model to use
-        self.fc1 = nn.Linear(500)
-        self.fc2 = nn.Linear(200)
-        self.fc3 = nn.Linear(40)
-        self.fc4 = nn.Linear(20)
-        self.fc5 = nn.Linear(2)
+
+        self.input_layer = nn.Linear(60 * 500, 500)
+        self.m1 = nn.Linear(500 * 200, 200)
+        self.m2 = nn.Linear(200 * 40, 40)
+        self.m3 = nn.Linear(40 * 20, 20)
+        self.output_layer = nn.Linear(20 * 2, 2)
 
     def forward(self, x):
-        x = F.relu(self.fc1(x))
+        x = self.input_layer(x).clamp(min=0)
         x = F.dropout(x, p=0.5, training=self.training)
 
-        x = F.relu(self.fc2(x))
+        x = self.m1(x).clamp(min=0)
         x = F.dropout(x, p=0.5, training=self.training)
 
-        x = F.relu(self.fc3(x))
-        x = F.relu(self.fc4(x))
-        x = F.relu(self.fc5(x))
-        return x
+        x = self.m2(x).clamp(min=0)
+        x = self.m3(x).clamp(min=0)
+
+        y_pred = self.output_layer(x).clamp(min=0)
+        return y_pred
 
 
-net = FinancialTimeSeriesNetwork()
-print(net)
+model = FinancialTimeSeriesNetwork()
+print(model)
 
 # Section 3.3 - Preprocessing
 # Section 3.4 - Labeling the Dataset
@@ -77,7 +87,7 @@ testloader = torch.utils.data.DataLoader(
 # Section 5.2; initial learning rate of 0.001
 # "We apply Stochastic Gradient Descent to train the models
 # with 100 batch size and 0.5 dropout rate"
-optimizer = optim.SGD(net.parameters(), lr=0.001)
+optimizer = optim.SGD(model.parameters(), lr=0.001)
 criterion = nn.Softmax()
 
 
@@ -91,14 +101,14 @@ running_loss = []
 for epoch in range(1):
     for i, data in enumerate(trainloader, 0):
         # XXX: Section 3.4 & Section 5.1 talk about labeling the data
-        inputs, labels = data
-        inputs, labels = Variable(inputs), Variable(labels)
+        x, y = data
+        x, y = Variable(x), Variable(y)
 
-        # zero the gradient buffers
+        y_pred = model(x)
+        loss = criterion(y_pred, y)
+
+        # zero gradients, perform a backward pass, and update the weights
         optimizer.zero_grad()
-
-        outputs = net(inputs)
-        loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
 
