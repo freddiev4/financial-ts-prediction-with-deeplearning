@@ -6,8 +6,6 @@ import torch.optim as optim
 
 import matplotlib.pyplot as plt
 
-from zipline.api import symbol, order
-
 
 class FinancialTimeSeriesNetwork(nn.Module):
 
@@ -24,11 +22,11 @@ class FinancialTimeSeriesNetwork(nn.Module):
         """
         super(FinancialTimeSeriesNetwork, self).__init__()
 
-        self.input_layer = nn.Linear(60 * 500, 500)
-        self.m1 = nn.Linear(500 * 200, 200)
-        self.m2 = nn.Linear(200 * 40, 40)
-        self.m3 = nn.Linear(40 * 20, 20)
-        self.output_layer = nn.Linear(20 * 2, 2)
+        self.input_layer = nn.Linear(60, 500)
+        self.m1 = nn.Linear(500, 200)
+        self.m2 = nn.Linear(200, 40)
+        self.m3 = nn.Linear(40, 20)
+        self.output_layer = nn.Linear(20, 2)
 
     def forward(self, x):
         x = self.input_layer(x).clamp(min=0)
@@ -101,6 +99,9 @@ running_loss = []
 for epoch in range(1):
     for i, data in enumerate(trainloader, 0):
         # XXX: Section 3.4 & Section 5.1 talk about labeling the data
+        # 60 Features; 1 Label
+        # Each feature is the price at every minute for 60 minutes
+        # Each label is the trend (-1 or 1)
         x, y = data
         x, y = Variable(x), Variable(y)
 
